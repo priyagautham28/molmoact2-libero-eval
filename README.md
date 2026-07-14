@@ -307,8 +307,7 @@ Best suite: `[suite]` at `[XX.X]%`. Worst suite: `[suite]` at `[XX.X]%`. Spread:
 
 ### Conclusion
 
-State plainly whether the proposal's success criterion was met (suite spread >10 points and/or at least one `|r| > 0.3, p < 0.05`), and what that implies: e.g., which suite MolmoAct2 struggles with most, whether visual clutter (object count/distractor density) or spatial difficulty (initial distance) is the better predictor of failure, and whether this matches or contradicts the intuition that harder LIBERO suites should correlate with lower success. If a suite had to be skipped (e.g., a crash), say so explicitly and note that three completed suites still satisfies the proposal's risk-mitigation plan below.
-
+--To be filled
 ## Risks & mitigations
 
 Carried over from the project proposal, with the decision rules we committed to:
