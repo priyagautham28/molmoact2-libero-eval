@@ -92,7 +92,9 @@ def reset_episode(env, init_states, episode_idx):
 
 setup_eval_environment()
 
-#Auto-enable video saving for suites
+# Auto-enable video saving for all suites (the membership check covers every
+# valid --suite value, so this is effectively always on regardless of --save_fail_videos;
+# kept explicit here so a future suite addition doesn't silently disable video saving).
 SAVE_FAIL_VIDEOS = args.save_fail_videos or args.suite in ["libero_spatial", "libero_object","libero_goal","libero_10"]
 MAX_FAIL_FRAMES_PER_TASK = 3
 VIDEO_FPS = 10 
@@ -162,7 +164,7 @@ log.info("use_init_states:    %s", args.use_init_states)
 log.info("use_egl:            %s", _resolve_use_egl())
 log.info("max_policy_steps:   %s", TASK_MAX_STEPS[args.suite])
 
-#Load MolmoAct2 policy 
+# Load MolmoAct2 policy
 log.info("Loading MolmoAct2...")
 from lerobot.policies import make_pre_post_processors
 from lerobot.policies.molmoact2.modeling_molmoact2 import MolmoAct2Policy
@@ -190,7 +192,7 @@ preprocessor, postprocessor = make_pre_post_processors(
 env_preprocessor = PolicyProcessorPipeline(steps=[LiberoProcessorStep()])
 log.info("MolmoAct2 loaded")
 
-#Load LIBERO benchmark
+# Load LIBERO benchmark
 log.info("Loading LIBERO suite: %s", args.suite)
 from libero.libero import benchmark
 from libero.libero.envs import OffScreenRenderEnv
@@ -199,13 +201,13 @@ task_suite = benchmark.get_benchmark_dict()[args.suite]()
 n_tasks    = task_suite.n_tasks
 log.info("Found %d tasks", n_tasks)
 
-#Camera mapping follow the official MolmoAct2-LIBERO-LeRobot https://huggingface.co/allenai/MolmoAct2-LIBERO-LeRobot
+# Camera mapping follows the official MolmoAct2-LIBERO-LeRobot checkpoint convention: https://huggingface.co/allenai/MolmoAct2-LIBERO-LeRobot
 CAMERA_MAP = {
     "agentview_image":        "image",
     "robot0_eye_in_hand_image": "wrist_image",
 }
 
-#BDDL parser: distractor density (NLP)
+# BDDL parser: distractor density (NLP)
 def _find_bddl_block(text, name):
     marker = f"(:{name}"
     start = text.find(marker)
@@ -258,7 +260,7 @@ def parse_bddl(bddl_path):
     }
 
 
-#write frames list to MP4
+# Write a list of frames to MP4
 def save_video(frames, path, fps=VIDEO_FPS):
     """Save list of HxWx3 uint8 numpy arrays as MP4."""
     if not frames:
@@ -298,6 +300,9 @@ for task_id in range(n_tasks):
 
     obs = reset_episode(env, init_states, episode_idx=0)
 
+    # objects_dict isn't part of LIBERO's public API and its presence varies by
+    # robosuite/LIBERO version, so this is best-effort: fall back to an empty
+    # dict (n_objects_sim = -1) rather than failing the whole task on older versions.
     try:
         objects_dict = getattr(env.env, "objects_dict", None) or {}
         object_names = list(objects_dict.keys())
@@ -306,6 +311,10 @@ for task_id in range(n_tasks):
         log.warning("Could not read objects_dict: %s", e)
         objects_dict, object_names, n_objects = {}, [], -1
 
+    # Initial gripper-to-target distance: same best-effort spirit as above.
+    # Prefer the observation's own eef position; fall back to the sim site position
+    # for envs that don't expose robot0_eef_pos. Target lookup tries the object's
+    # root_body first (robosuite convention) and falls back to the raw object name.
     distance = -1.0
     try:
         if "robot0_eef_pos" in obs:
@@ -346,7 +355,9 @@ for task_id in range(n_tasks):
     task_successes = 0
     max_steps      = TASK_MAX_STEPS[args.suite]
 
-    #Episode loop
+    # Episode loop
+    # Clip to len(init_states) so each episode gets a distinct fixed init state;
+    # reset_episode()'s modulo indexing would otherwise start repeating states within one run.
     n_episodes = min(args.n_episodes, len(init_states)) if init_states is not None else args.n_episodes
     for episode_idx in range(n_episodes):
         obs = reset_episode(env, init_states, episode_idx)
@@ -356,8 +367,8 @@ for task_id in range(n_tasks):
             frame = obs.get("agentview_image")
             if frame is not None:
                 fp = frames_dir / f"{task_key}_initial.jpg"
-                #LIBERO’s agentview_image comes out rotated 180° (OpenGL/MuJoCo convention). LiberoProcessor corrects that for the model. 
-                #In eval_molmoact2.py it has to be flipped before appending.
+                # LIBERO's agentview_image comes out rotated 180 degrees (OpenGL/MuJoCo convention).
+                # LiberoProcessor corrects this for the model, so we flip here to match before saving.
                 flipped = np.ascontiguousarray(frame[::-1, ::-1], dtype=np.uint8)
                 Image.fromarray(flipped).save(fp)
                 frame_path = str(fp)
@@ -430,12 +441,14 @@ for task_id in range(n_tasks):
             action_np = action.squeeze(0).cpu().float().numpy()
             obs, reward, done, info = env.step(action_np)
 
+            # LIBERO's reward is sparse and binary: >0 only on the step the task's
+            # goal predicate is satisfied, so this is the episode's success signal.
             if reward > 0:
                 success = True
                 done    = True
             step += 1
 
-        #Post-episode: save failure artifacts
+        # Post-episode: save failure artifacts
         if not success and task_failures < MAX_FAIL_FRAMES_PER_TASK:
             # Save failure JPG frame
             fail_frame = obs.get("agentview_image")
@@ -495,6 +508,9 @@ DISTRACTOR_DENSITY_FIELDS = [
     "total_objects", "target_objects", "n_distractors", "distractor_density",
 ]
 
+# scene_properties.csv is the full CV-phase table (sim metadata included);
+# distractor_density.csv is the same rows narrowed to just the NLP-phase columns,
+# so the NLP analysis doesn't need to know about CV-only fields like initial_distance.
 with open(scene_props_path, "w", newline="") as f:
     w = csv.DictWriter(f, fieldnames=SCENE_PROP_FIELDS)
     w.writeheader(); w.writerows(all_scene_props)

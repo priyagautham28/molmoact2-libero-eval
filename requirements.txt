@@ -62,7 +62,9 @@ jupyter-core==5.9.1
 jupytext==1.19.4
 kiwisolver==1.5.0
 lerobot==0.6.0
--e file:///home/priya/LIBERO
+# LIBERO is not on PyPI — clone and install it separately, see README "Setup" step 5:
+#   git clone https://github.com/Lifelong-Robot-Learning/LIBERO.git
+#   cd LIBERO && pip install -e . && cd ..
 llvmlite==0.48.0
 markdown==3.10.2
 markdown-it-py==4.2.0
