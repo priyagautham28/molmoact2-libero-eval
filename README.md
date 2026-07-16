@@ -247,28 +247,48 @@ Running `eval_molmoact2.py` (see **Usage** above) generates everything else need
 
 ## Analysis
 
-Once one or more suites have been run, `nlp_analysis_table.csv` (per suite, under each suite's output folder) already contains success rate merged with scene properties. Concatenate across suites and run the correlation analysis from the project plan:
+Once one or more suites have been run, each suite folder contains results.csv (per-episode success) and scene_properties.csv (per-task sim/BDDL features). Aggregate success by task, merge with scene properties, concatenate across suites, and run the correlation analysis:
 
 ```python
 import pandas as pd
 from scipy.stats import spearmanr
+from pathlib import Path
+
+def load_suite(suite_dir: str) -> pd.DataFrame:
+    root = Path(suite_dir)
+    results = pd.read_csv(root / "results.csv")
+    props = pd.read_csv(root / "scene_properties.csv")
+
+    task_sr = (
+        results.groupby(["task_id", "suite"], as_index=False)
+        .agg(
+            success_rate=("success", "mean"),
+            n_episodes=("success", "count"),
+            avg_steps=("n_steps", "mean"),
+        )
+    )
+    return task_sr.merge(props, on=["task_id", "suite"], how="left")
 
 df = pd.concat([
-    pd.read_csv("outputs/custom_eval/libero_spatial/nlp_analysis_table.csv"),
-    pd.read_csv("outputs/custom_eval/libero_object/nlp_analysis_table.csv"),
-    pd.read_csv("outputs/custom_eval/libero_goal/nlp_analysis_table.csv"),
-    pd.read_csv("outputs/custom_eval/libero_10/nlp_analysis_table.csv"),
-])
+    load_suite("outputs/custom_eval_recovery/libero_spatial"),
+    load_suite("outputs/custom_eval_recovery/libero_object"),
+    load_suite("outputs/custom_eval_500/libero_goal"),
+    load_suite("outputs/custom_eval_500/libero_10"),  # when available
+], ignore_index=True)
 
 # Primary CV result: suite-level success rate
 suite_success = df.groupby("suite")["success_rate"].mean()
 
-# Scene-property correlations (CV phase)
-r_dist, p_dist = spearmanr(df["initial_distance"], df["success_rate"])
+# Scene-property correlations (CV)
+dist = df[df["initial_distance"] >= 0]  # drop invalid Goal distances (-1)
+r_dist, p_dist = spearmanr(dist["initial_distance"], dist["success_rate"])
 r_obj, p_obj   = spearmanr(df["n_objects_sim"], df["success_rate"])
+r_dd, p_dd     = spearmanr(df["distractor_density"], df["success_rate"])
 
-# Distractor density correlation (NLP phase)
-r_dd, p_dd = spearmanr(df["distractor_density"], df["success_rate"])
+print(suite_success)
+print("initial_distance", r_dist, p_dist)
+print("n_objects_sim", r_obj, p_obj)
+print("distractor_density", r_dd, p_dd)
 ```
 
 Suggested figures (per the project plan):
