@@ -2,9 +2,9 @@
 
 **Analyzing the Impact of Visual Scene Complexity on Robot Manipulation with MolmoAct2**
 
-Team: Pick and Parse (Priya, Poojitha, Mounika), CSE D 504
+Team: Pick and Parse (Priyadarshini Rajmohan, Poojitha Alam, Mounika Akkenapragada), CSE D 504
 
-MolmoAct2 (Allen Institute for AI, 2026) is one of the most recent open Vision-Language-Action (VLA) models: it has a visual reasoning mechanism built into its architecture, full LIBERO evaluation support, and publicly available checkpoints, yet no systematic visual failure-mode analysis of it across all four LIBERO suites exists in the literature. This repo runs MolmoAct2 (`allenai/MolmoAct2-LIBERO-LeRobot`) on all four [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO) task suites (Spatial, Object, Goal, Long; 40 tasks, 50 episodes/task, 2,000 episodes total) as an **inference-only** pipeline (no training happens here), extracting scene-complexity features directly from the simulator state (object count, gripper-to-target distance, BDDL distractor density) with zero extra models or manual annotation, so we can identify *which visual/linguistic scene properties predict where MolmoAct2 fails*.
+MolmoAct2 (Allen Institute for AI, 2026) is one of the most recent open Vision-Language-Action (VLA) models: it has a embodied-reasoning VLM backbone (Molmo2-ER), full LIBERO evaluation support, and publicly available checkpoints, we provide a suite-wide LIBERO failure / scene-property analysis for this checkpoint under a fixed eval protocol. This repo runs MolmoAct2 (`allenai/MolmoAct2-LIBERO-LeRobot`) on all four [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO) task suites (Spatial, Object, Goal, Long; 40 tasks, 50 episodes/task, 2,000 episodes total) as an **inference-only** pipeline (no training happens here), extracting scene-complexity features directly from the simulator state (object count, gripper-to-target distance, BDDL distractor density) with zero extra models or manual annotation, so we can identify *which visual/linguistic scene properties predict where MolmoAct2 fails*.
 
 ## Research question
 
@@ -12,7 +12,7 @@ How does MolmoAct2's task success rate vary across LIBERO task suites, and which
 
 - **Minimal goal:** per-task success rates across all 2,000 episodes; a baseline profile of which suite is easiest/hardest.
 - **Ambitious goal:** Spearman correlation between scene properties and success rate, a qualitative failure gallery, and (in the follow-on NLP phase) whether visual clutter and distractor density are correlated predictors of failure.
-- **Success criterion:** suite-level success rates differ by >10 points and/or at least one scene property correlates with success at `|r| > 0.3, p < 0.05`. A null result (no correlation) is also a valid, reportable finding; it would suggest MolmoAct2 is robust to the complexity variation present in LIBERO.
+- **Success criterion:** Deliver suite and task level success rates for all four LIBERO suites under a fixed MolmoAct2 protocol, plus Spearman tests of scene properties vs success. A large suite gap or |r| > 0.3 with p < 0.05 would indicate complexity-sensitive failures, a null/weak result is also valid, especially if scene properties vary little within suites.
 
 ## Motivation
 
@@ -28,7 +28,7 @@ Why this design, specifically:
 
 - **Scene properties come from the simulator, not a second vision model.** Object count, distractor density, and gripper-to-target distance are read directly from LIBERO's own state (BDDL files, sim positions) rather than estimated by a detector. That removes a whole source of noise/confound from the analysis: any correlation we find is between MolmoAct2's behavior and *ground-truth* scene complexity, not between MolmoAct2 and some other model's guess at scene complexity. It's also free: zero extra GPU time, per the proposal's constraint.
 - **LIBERO's four suites double as the complexity axis.** Rather than inventing a new complexity metric, we use Spatial/Object/Goal/Long as-is: LIBERO's own designers already ordered these by increasing difficulty, so suite label is a pre-validated proxy we don't have to justify from scratch.
-- **Distractor density is defined from the BDDL ground truth** (`total objects / target objects`), not from counting objects in an image. Same reasoning as above: deterministic and reproducible, not dependent on a second model's accuracy.
+- **Distractor density is defined from the BDDL ground truth** (`n_distractors / total_objects`), rather than estimated from camera images.. Same reasoning as above: deterministic and reproducible, not dependent on a second model's accuracy.
 - **Spearman, not Pearson, for the correlation analysis.** Success rate is bounded in [0, 1] and scene properties (object count, distance) aren't guaranteed to relate to it linearly; Spearman only assumes a monotonic relationship, which is the weaker, more defensible assumption here.
 - **Fixed eval seed, per-episode seeding, and LIBERO's built-in init states** (`--eval_seed 1000`, `--per_episode_seed`, `--use_init_states`) match the protocol MolmoAct2's own published LIBERO numbers were evaluated under, so our success rates are comparable to prior reported results rather than an artifact of a different eval setup.
 
@@ -286,9 +286,9 @@ Suggested figures (per the project plan):
 
 | Suite | Success rate | Episodes run | Notes |
 |---|---|---|---|
-| `libero_spatial` | `[XX.X]%` | `[N]` / 500 | |
-| `libero_object` | `[XX.X]%` | `[N]` / 500 | |
-| `libero_goal` | `[XX.X]%` | `[N]` / 500 | |
+| `libero_spatial` | `[97.8]%` | `[500]` / 500 | |
+| `libero_object` | `[99.8]%` | `[500]` / 500 | |
+| `libero_goal` | `[97.8]%` | `[500]` / 500 | |
 | `libero_10` (Long) | `[XX.X]%` | `[N]` / 500 | |
 
 Best suite: `[suite]` at `[XX.X]%`. Worst suite: `[suite]` at `[XX.X]%`. Spread: `[XX.X]` points ( **meets** / **does not meet** the >10-point success criterion).
@@ -330,11 +330,11 @@ Only open-source models (MolmoAct2, Apache 2.0) and benchmarks (LIBERO, MIT Lice
 
 ## References
 
-1. Wang et al. (2026). *MolmoAct2: Action Reasoning Models for Real-World Deployment.* Allen Institute for AI. arXiv:2605.02881.
-2. Liu et al. (2023). *LIBERO: Benchmarking Knowledge Transfer for Lifelong Robot Learning.* NeurIPS 2023.
-3. Cadene et al. (2026). *LeRobot: An Open-Source Library for End-to-End Robot Learning.* ICLR 2026. arXiv:2602.22818.
-4. Zhou et al. (2025). *LIBERO-PRO: Towards Robust and Fair Evaluation of VLA Models Beyond Memorization.* arXiv:2510.03827.
-5. Kim et al. (2024). *OpenVLA: An Open-Source Vision-Language-Action Model.* CoRL 2024.
-6. Shukor et al. (2025). *SmolVLA: A Vision-Language-Action Model for Affordable and Efficient Robotics.* Hugging Face.
-7. Zhen et al. (2025). *TraceVLA: Visual Trace Prompting Enhances Spatial-Temporal Awareness for Generalist Robotic Policies.* arXiv:2412.10345.
-8. Lifelong Robot Learning. *LIBERO Benchmark Repository.* GitHub. https://github.com/Lifelong-Robot-Learning/LIBERO
+1. Fang et al. (2026). *MolmoAct2: Action Reasoning Models for Real-World Deployment.* Allen Institute for AI. [https://arxiv.org/abs/2605.02881](https://arxiv.org/abs/2605.02881)
+2. Liu et al. (2023). *LIBERO: Benchmarking Knowledge Transfer for Lifelong Robot Learning.* NeurIPS 2023. [https://arxiv.org/abs/2306.03310](https://arxiv.org/abs/2306.03310)
+3. Cadene et al. (2026). *LeRobot: An Open-Source Library for End-to-End Robot Learning.* ICLR 2026. [https://arxiv.org/abs/2602.22818](https://arxiv.org/abs/2602.22818)
+4. Zhou et al. (2025). *LIBERO-PRO: Towards Robust and Fair Evaluation of VLA Models Beyond Memorization.* [https://arxiv.org/abs/2510.03827](https://arxiv.org/abs/2510.03827)
+5. Kim et al. (2024). *OpenVLA: An Open-Source Vision-Language-Action Model.* CoRL 2024. [https://arxiv.org/abs/2406.09246](https://arxiv.org/abs/2406.09246)
+6. Shukor et al. (2025). *SmolVLA: A Vision-Language-Action Model for Affordable and Efficient Robotics.* [https://arxiv.org/abs/2506.01844](https://arxiv.org/abs/2506.01844)
+7. Zhen et al. (2025). *TraceVLA: Visual Trace Prompting Enhances Spatial-Temporal Awareness for Generalist Robotic Policies.* [https://arxiv.org/abs/2412.10345](https://arxiv.org/abs/2412.10345)
+8. Lifelong Robot Learning. *LIBERO Benchmark Repository.* GitHub. [https://github.com/Lifelong-Robot-Learning/LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO)
