@@ -323,9 +323,15 @@ Best suite: `[Object]` at `[99.8]%`. Worst suite: `[Long]` at `[96.8]%`. Spread:
 ![Pooled hardest tasks across all suites](results/combined_results/04_pooled_hardest_tasks.png)
 *Bottom 15 tasks by success rate, pooled across all four suites and colored by suite of origin. The hardest tasks are dominated by multi-object and articulated/container instructions, not any single suite.*
 
+![success example ](results/libero_spatial/videos/successes/libero_spatial_9_ep18_ok.mp4)
+![success example](results/libero_object/videos/successes/libero_object_9_ep40_ok.mp4)
 ### Spatial suite analysis: 
 
+![Spatial failure example](results/libero_spatial/videos/failures/libero_spatial_4_ep1_fail.mp4)
+
 ### Object suite analysis: 
+
+![Spatial failure example](results/libero_object/videos/failures/libero_object_4_ep16_fail.mp4)
 
 ### Goal suite analysis: 
 
