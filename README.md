@@ -345,7 +345,10 @@ Best suite: `[Object]` at `[99.8]%`. Worst suite: `[Long]` at `[96.8]%`. Spread:
 
 ### Conclusion
 
---To be filled
+Across all four LIBERO suites (2,000 episodes), MolmoAct2 is consistently strong: pooled success 97.95%, with only a small gap from easiest to hardest (Object 99.8% → Long 96.8%, ~3 points). Most tasks are near ceiling, the remaining errors sit in a small set of harder tasks, not as a broad collapse on any one suite.
+
+What we see in practice is a policy that usually completes the task on a clean first attempt. When that first attempt goes wrong especially choosing the wrong object or failing a grasp/place the episode often runs out the step budget rather than clearly correcting and finishing. We do not frame this as a unique flaw of MolmoAct2: many current robot policies and VLA systems are similarly optimized for successful demonstrations and first-pass execution, with limited emphasis on retry or recovery. High aggregate success on LIBERO is therefore compatible with brittle behavior on a minority of hard scenes, which is the pattern our suite and task-level results support.
+
 ## Risks & mitigations
 
 Carried over from the project proposal, with the decision rules we committed to:
