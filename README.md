@@ -304,10 +304,10 @@ Suggested figures (per the project plan):
 
 | Suite | Success rate | Episodes run | Perfect tasks ( /10) | Min task SR | Avg steps  | Notes |
 |---|---|---|---|---|---|---|
-| `libero_spatial` | `[97.4]%` | `[500]` / 500 | 8 | `[82.0]%` | `[105.6]%` | Wider task spread (std ~6) |
+| `libero_spatial` | `[97.4]%` | `[500]` / 500 | 8 | `[82.0]%` | `105.6` | Wider task spread (std ~6) |
 | `libero_object` | `[99.8]%` | `[500]` / 500 | 9 | `[98.0]%` | `131.6` | Easiest, nearly saturated |
 | `libero_goal` | `[97.8]%` | `[500]` / 500 | 5 | `[90.0]%` | `111.7` | Fewest perfect tasks |
-| `libero_10` (Long) | `[96.8]%` | `[500]` / 500 | 6 | `[82.0]%` | `[249.0]%` | Hardest suite, most steps |
+| `libero_10` (Long) | `[96.8]%` | `[500]` / 500 | 6 | `[82.0]%` | `249.0` | Hardest suite, most steps |
 
 Best suite: `[Object]` at `[99.8]%`. Worst suite: `[Long]` at `[96.8]%`. Spread: `[3.0]` points ( **does not meet** the >10-point success criterion).
 
@@ -333,11 +333,12 @@ Best suite: `[Object]` at `[99.8]%`. Worst suite: `[Long]` at `[96.8]%`. Spread:
 
 ### Scene-property correlations (Spearman)
 
-| Property | r | p | `|r| > 0.3, p < 0.05`? |
+| Suite | `initial_distance` | `n_objects_sim` | `distractor_density` |
 |---|---|---|---|
-| `initial_distance` (`r_dist`, `p_dist`) | `[r]` | `[p]` | `[yes/no]` |
-| `n_objects_sim` (`r_obj`, `p_obj`) | `[r]` | `[p]` | `[yes/no]` |
-| `distractor_density` (`r_dd`, `p_dd`) | `[r]` | `[p]` | `[yes/no]` |
+| Spatial | r = 0.45, p = 0.19 → **no** (this property did not meet the success bar) | **n/a** (same value on all 10 tasks — no variation to correlate) | **n/a** (same value on all 10 tasks — no variation to correlate) |
+| Object | r = 0.06, p = 0.87 → **no** (this property did not meet the success bar) | **n/a** (same value on all 10 tasks — no variation to correlate) | **n/a** (same value on all 10 tasks — no variation to correlate) |
+| Goal | r = 0.09, p = 0.83 → **no** (this property did not meet the success bar) | **n/a** (same value on all 10 tasks — no variation to correlate) | r = −0.24, p = 0.51 → **no** |
+| Long |  |  |  |
 
 ### Failure gallery
 
