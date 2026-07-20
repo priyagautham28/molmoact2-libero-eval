@@ -1,0 +1,11 @@
+task_id,suite,instruction,total_objects,target_objects,n_distractors,distractor_density
+libero_goal_0,libero_goal,Open the middle layer of the drawer,4,1,4,1.0
+libero_goal_1,libero_goal,Put the bowl on the stove,4,2,3,0.75
+libero_goal_2,libero_goal,Put the wine bottle on the top of the drawer,4,2,3,0.75
+libero_goal_3,libero_goal,Open the top layer of the drawer and put the bowl inside,4,2,3,0.75
+libero_goal_4,libero_goal,Put the bowl on the top of the drawer,4,2,3,0.75
+libero_goal_5,libero_goal,Push the plate to the front of the stove,4,2,3,0.75
+libero_goal_6,libero_goal,Put the cream cheese on the bowl,4,2,2,0.5
+libero_goal_7,libero_goal,Turn on the stove,4,1,4,1.0
+libero_goal_8,libero_goal,Put the bowl on the plate,4,2,2,0.5
+libero_goal_9,libero_goal,Put the wine bottle on the rack,4,2,3,0.75
