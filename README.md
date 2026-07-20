@@ -8,7 +8,7 @@ MolmoAct2 (Allen Institute for AI, 2026) is one of the most recent open Vision-L
 
 ## Research question
 
-How does MolmoAct2's task success rate vary across LIBERO task suites, and which scene properties (object density, spatial layout, task length, distractor density: total objects / target objects named in the instruction) explain where the model succeeds vs. fails?
+How does MolmoAct2's task success rate vary across LIBERO task suites, and which scene properties (object density, spatial layout, task length, distractor density: n_distractors / total_objects named in the instruction) explain where the model succeeds vs. fails?
 
 - **Minimal goal:** per-task success rates across all 2,000 episodes; a baseline profile of which suite is easiest/hardest.
 - **Ambitious goal:** Spearman correlation between scene properties and success rate, a qualitative failure gallery, and (in the follow-on NLP phase) whether visual clutter and distractor density are correlated predictors of failure.
@@ -300,18 +300,16 @@ Suggested figures (per the project plan):
 
 ## Results & conclusions
 
-*Runs are in progress across the team; this section is a fill-in template so whoever merges the final CSVs can drop numbers straight in from the **Analysis** snippet above.*
-
 ### Suite-level success rates (primary CV result)
 
-| Suite | Success rate | Episodes run | Notes |
-|---|---|---|---|
-| `libero_spatial` | `[97.8]%` | `[500]` / 500 | |
-| `libero_object` | `[99.8]%` | `[500]` / 500 | |
-| `libero_goal` | `[97.8]%` | `[500]` / 500 | |
-| `libero_10` (Long) | `[XX.X]%` | `[N]` / 500 | |
+| Suite | Success rate | Episodes run | Perfect tasks ( /10) | Min task SR | Avg steps  | Notes |
+|---|---|---|---|---|---|---|
+| `libero_spatial` | `[97.4]%` | `[500]` / 500 | 8 | `[82.0]%` | `[105.6]%` | Wider task spread (std ~6) |
+| `libero_object` | `[99.8]%` | `[500]` / 500 | 9 | `[98.0]%` | `131.6` | Easiest, nearly saturated |
+| `libero_goal` | `[97.8]%` | `[500]` / 500 | 5 | `[90.0]%` | `111.7` | Fewest perfect tasks |
+| `libero_10` (Long) | `[96.8]%` | `[500]` / 500 | 6 | `[82.0]%` | `[249.0]%` | Hardest suite, most steps |
 
-Best suite: `[suite]` at `[XX.X]%`. Worst suite: `[suite]` at `[XX.X]%`. Spread: `[XX.X]` points ( **meets** / **does not meet** the >10-point success criterion).
+Best suite: `[Object]` at `[99.8]%`. Worst suite: `[Long]` at `[96.8]%`. Spread: `[3.0]` points ( **does not meet** the >10-point success criterion).
 
 ### Scene-property correlations (Spearman)
 
