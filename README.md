@@ -320,7 +320,7 @@ Best suite: `[Object]` at `[99.8]%`. Worst suite: `[Long]` at `[96.8]%`. Spread:
 ![Step-budget usage by suite](results/combined_results/03_step_budget_usage.png)
 *Mean steps used as a percentage of each suite's step budget — normalizes for the different `max_steps` caps (280/280/300/520) so suites are cross-comparable. Object and Long both use ~47% of budget despite being the easiest and hardest suites by success rate.*
 
-![Pooled hardest tasks across all suites](results/combined_results/04_pooled_hardest_tasks.png)
+![Pooled hardest tasks across all suites](results/combined_results/04_pooled_hardest_tasks (1).png)
 *Bottom 15 tasks by success rate, pooled across all four suites and colored by suite of origin. The hardest tasks are dominated by multi-object and articulated/container instructions, not any single suite.*
 
 ### Spatial suite analysis: 
