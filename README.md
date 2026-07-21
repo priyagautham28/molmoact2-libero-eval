@@ -4,7 +4,7 @@
 
 Team: Pick and Parse (Priyadarshini Rajmohan, Poojitha Alam, Mounika Akkenapragada), CSE D 504
 
-MolmoAct2 (Allen Institute for AI, 2026) is one of the most recent open Vision-Language-Action (VLA) models: it has an embodied-reasoning VLM backbone (Molmo2-ER), full LIBERO evaluation support, and publicly available checkpoints, we provide a suite-wide LIBERO failure / scene-property analysis for this checkpoint under a fixed eval protocol. This repo runs MolmoAct2 (`allenai/MolmoAct2-LIBERO-LeRobot`) on all four [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO) task suites (Spatial, Object, Goal, Long; 40 tasks, 50 episodes/task, 2,000 episodes total) as an **inference-only** pipeline (no training happens here), extracting scene-complexity features directly from the simulator state (object count, gripper-to-target distance, BDDL distractor density) with zero extra models or manual annotation, so we can identify *which visual/linguistic scene properties predict where MolmoAct2 fails*.
+MolmoAct2 (Allen Institute for AI, 2026) is a recent open Vision-Language-Action (VLA) model with an embodied-reasoning VLM backbone (Molmo2-ER), full LIBERO evaluation support, and public checkpoints. This repo runs MolmoAct2 (`allenai/MolmoAct2-LIBERO-LeRobot`) on all four [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO) suites (Spatial, Object, Goal, Long; 40 tasks × 50 episodes = 2,000 episodes) as an **inference-only** pipeline. We extract scene-complexity features from simulator/BDDL state (object counts, gripper-to-target distance, distractor density) with no extra vision models, and we analyze where MolmoAct2 succeeds vs fails
 
 ## Research question
 
@@ -229,8 +229,8 @@ All computed directly in `eval_molmoact2.py` / the CSVs it produces, no external
 
 | File                                                                                    | Purpose                                                                                                                  |
 | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| [eval\_molmoact2.py](src/eval_molmoact2.py) | eval script used for the Goal|
-| [eval\_molmoact2\_spatial\_object.py](src/eval_molmoact2_spatial_object.py) | Suite-specific eval script used for the Object and Spatial suites. |
+| [eval\_molmoact2.py](src/eval_molmoact2.py) | eval script used for the Goal (success, steps, scene properties, fail videos)|
+| [eval\_molmoact2\_spatial\_object.py](src/eval_molmoact2_spatial_object.py) | Suite-specific eval script used for the Object and Spatial suites and additionally logs grasp/close events, nearest object at first close, pick/place distances, path length, timeout, and `likely_recovery` for failure-mode analysis. |
 | [GLOSSARY.md](docs/GLOSSARY.md) | Definitions of LIBERO/MolmoAct2 terms used throughout this repo. |
 | [LIBERO\_Object\_Spatial\_Detailed\_Analysis.pdf](docs/LIBERO_Object_Spatial_Detailed_Analysis.pdf) | Full Object/Spatial findings — per-task breakdowns, failure mechanisms, evidence tables. Referenced from the Object/Spatial analysis sections below. |
 | [requirements.txt](requirements.txt)    | Pinned Python dependencies (see note on LIBERO below; it isn't pip-installable from PyPI and must be cloned separately). |
@@ -315,7 +315,7 @@ Best suite: `[Object]` at `[99.8]%`. Worst suite: `[Long]` at `[96.8]%`. Spread:
 
 ![Combined suite success rate and episode counts](results/combined_results/01_combined_suite_summary.png)
 
-*Suite-level success rate and episode counts across all four suites.*
+*Suite-level success rate across all four suites (y-axis zoomed near ceiling; Δ = points below 100%).*
 
 ![Per-suite difficulty spread](results/combined_results/02_difficulty_spread_by_suite.png)
 
@@ -446,13 +446,26 @@ https://github.com/user-attachments/assets/2964bb88-6fcd-47f2-8193-1812165969ee
 
 ### Failure gallery
 
-3–5 hand-picked frames from `frames/failures/`, pairing an easy (high-success) task against a hard (low-success) one, each with a one-line explanation of what likely went wrong (e.g., gripper missed target, wrong object grasped, task timed out at `max_steps`).
+Representative failure clips by suite (full folders linked; one example each).  
+On GitHub, open a link to view/download the MP4.
+| Suite | Failure videos folder |
+|---|---|
+| Spatial | [`results/libero_spatial/videos/failures/`](results/libero_spatial/videos/failures/) | 
+| Object | [`results/libero_object/videos/failures/`](results/libero_object/videos/failures/) | 
+| Goal | [`results/libero_goal/videos/failures/`](results/libero_goal/videos/failures/) | 
+| Long |  |  |
 
 ### Conclusion
 
 Across all four LIBERO suites (2,000 episodes), MolmoAct2 is consistently strong: pooled success 97.95%, with only a small gap from easiest to hardest (Object 99.8% → Long 96.8%, ~3 points). Most tasks are near ceiling, the remaining errors sit in a small set of harder tasks, not as a broad collapse on any one suite.
 
 What we see in practice is a policy that usually completes the task on a clean first attempt. When that first attempt goes wrong especially choosing the wrong object or failing a grasp/place the episode often runs out the step budget rather than clearly correcting and finishing. We do not frame this as a unique flaw of MolmoAct2: many current robot policies and VLA systems are similarly optimized for successful demonstrations and first-pass execution, with limited emphasis on retry or recovery. High aggregate success on LIBERO is therefore compatible with brittle behavior on a minority of hard scenes, which is the pattern our suite and task-level results support.
+
+### Next steps
+1. **NLP / language ablations (priority):** On Spatial Task 5 (and optionally T0), hold scenes/seeds fixed and vary instructions (direct vs relational vs ambiguous, left/right or on/next-to counterfactuals). Score **correct object at first close** and success not only LIBERO reward when the text no longer matches the BDDL goal.
+2. **Long Task 8 language/subgoal ladder:** Hold scenes fixed on *both moka pots → stove* (82%), ablate “both” vs ordered placement and pot-identity phrasing, measure whether failures stay at **second-pot place** (as in the failure videos) vs shift earlier — parallel to the Spatial T5 instruction ladder.
+3. **Architecture follow-ups (optional):** Chunk-level action logging (`n_action_steps≈30`) for closed-loop correction, small A/B with `MolmoAct2-Think-LIBERO` on Spatial T5.
+4. **Goal language ablations:** On Goal Tasks 2 & 3 (90% / 94%), hold init states fixed and swap goal paraphrases / goal conditions (same objects, different target predicate or multi-step vs single-step wording), report success and timeouts per variant—mirroring the Spatial T5 instruction ladder.
 
 ## Risks & mitigations
 
