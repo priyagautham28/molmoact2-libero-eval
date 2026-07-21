@@ -4,7 +4,7 @@
 
 Team: Pick and Parse (Priyadarshini Rajmohan, Poojitha Alam, Mounika Akkenapragada), CSE D 504
 
-MolmoAct2 (Allen Institute for AI, 2026) is one of the most recent open Vision-Language-Action (VLA) models: it has a embodied-reasoning VLM backbone (Molmo2-ER), full LIBERO evaluation support, and publicly available checkpoints, we provide a suite-wide LIBERO failure / scene-property analysis for this checkpoint under a fixed eval protocol. This repo runs MolmoAct2 (`allenai/MolmoAct2-LIBERO-LeRobot`) on all four [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO) task suites (Spatial, Object, Goal, Long; 40 tasks, 50 episodes/task, 2,000 episodes total) as an **inference-only** pipeline (no training happens here), extracting scene-complexity features directly from the simulator state (object count, gripper-to-target distance, BDDL distractor density) with zero extra models or manual annotation, so we can identify *which visual/linguistic scene properties predict where MolmoAct2 fails*.
+MolmoAct2 (Allen Institute for AI, 2026) is one of the most recent open Vision-Language-Action (VLA) models: it has an embodied-reasoning VLM backbone (Molmo2-ER), full LIBERO evaluation support, and publicly available checkpoints, we provide a suite-wide LIBERO failure / scene-property analysis for this checkpoint under a fixed eval protocol. This repo runs MolmoAct2 (`allenai/MolmoAct2-LIBERO-LeRobot`) on all four [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO) task suites (Spatial, Object, Goal, Long; 40 tasks, 50 episodes/task, 2,000 episodes total) as an **inference-only** pipeline (no training happens here), extracting scene-complexity features directly from the simulator state (object count, gripper-to-target distance, BDDL distractor density) with zero extra models or manual annotation, so we can identify *which visual/linguistic scene properties predict where MolmoAct2 fails*.
 
 ## Research question
 
@@ -127,15 +127,15 @@ The MolmoAct2 checkpoint (`allenai/MolmoAct2-LIBERO-LeRobot`, Apache 2.0, ~10 GB
 Run one suite at a time:
 
 ```bash
-python eval_molmoact2.py --suite libero_spatial --n_episodes 50 --device cuda
-python eval_molmoact2.py --suite libero_object  --n_episodes 50 --device cuda
+python eval_molmoact2_spatial_object.py --suite libero_spatial --n_episodes 50 --device cuda
+python eval_molmoact2_spatial_object.py --suite libero_object  --n_episodes 50 --device cuda
 python eval_molmoact2.py --suite libero_goal    --n_episodes 50 --device cuda
 python eval_molmoact2.py --suite libero_10      --n_episodes 50 --device cuda
 ```
 
 (`libero_10` is LIBERO's internal name for the Long suite.) For a quick smoke test before a full overnight run, use `--n_episodes 1` and `--device cpu`.
 
-Key flags (see `python eval_molmoact2.py --help` for the full list):
+Key flags (see `python eval_molmoact2.py --help`,`python eval_molmoact2_spatial_object.py --help` for the full list):
 
 | Flag | Default | Notes |
 |---|---|---|
@@ -148,7 +148,7 @@ Key flags (see `python eval_molmoact2.py --help` for the full list):
 | `--use_init_states` / `--no-use_init_states` | on | Use LIBERO's fixed per-episode init states (reproducibility) |
 | `--per_episode_seed` / `--no-per_episode_seed` | on | Derive episode seed as `eval_seed + episode_idx`; off reuses `eval_seed` for every episode |
 | `--use_egl` / `--no-use_egl` | auto | Force EGL headless rendering on/off; auto-detects Linux+CUDA if omitted |
-| `--save_fail_videos` | off | Rarely needed manually; the script already auto-enables failure videos for all four suites ([eval_molmoact2.py:96](eval_molmoact2.py#L96)) |
+| `--save_fail_videos` | off | Rarely needed manually; the script already auto-enables failure videos for all four suites ([eval_molmoact2.py:96](src/eval_molmoact2.py#L96)) |
 
 Each suite takes roughly 1–2 hours on CUDA at `n_episodes=50`; total GPU time for all four suites is ~4–6 hours. Runs are independent per suite and can be split across teammates/machines and merged afterward (all outputs key on `task_id`).
 
@@ -162,8 +162,8 @@ Each suite takes roughly 1–2 hours on CUDA at `n_episodes=50`; total GPU time 
 
 ```bash
 # Priya
-python eval_molmoact2.py --suite libero_object  --n_episodes 50 --device cuda
-python eval_molmoact2.py --suite libero_spatial --n_episodes 50 --device cuda
+python eval_molmoact2_spatial_object.py --suite libero_object  --n_episodes 50 --device cuda
+python eval_molmoact2_spatial_object.py --suite libero_spatial --n_episodes 50 --device cuda
 
 # Poojitha
 python eval_molmoact2.py --suite libero_goal --n_episodes 50 --device cuda
@@ -194,22 +194,22 @@ After all four suites finish, merge each suite's `nlp_analysis_table.csv` (see *
 
 ## Input
 
-At every control step, `eval_molmoact2.py` assembles a `mapped_obs` dict ([eval_molmoact2.py:380-411](eval_molmoact2.py#L380-L411)) and runs it through `env_preprocessor` (`LiberoProcessorStep`) then `preprocessor` (MolmoAct2's tokenize/normalize/pack pipeline) before calling `policy.select_action()`. The model receives:
+At every control step, `eval_molmoact2.py` assembles a `mapped_obs` dict ([eval_molmoact2.py:380-411](src/eval_molmoact2.py#L380-L411)) and runs it through `env_preprocessor` (`LiberoProcessorStep`) then `preprocessor` (MolmoAct2's tokenize/normalize/pack pipeline) before calling `policy.select_action()`. The model receives:
 
 - **Two RGB camera views**, each `(1, C, H, W)` float32, normalized to `[0, 1]`:
   - `agentview_image` → `observation.images.image` (third-person view)
   - `robot0_eye_in_hand_image` → `observation.images.wrist_image` (wrist camera)
-  - Camera mapping follows the official checkpoint's convention ([eval_molmoact2.py:203-206](eval_molmoact2.py#L203-L206)). Both are rendered at 256×256 by `OffScreenRenderEnv` and flipped 180° to correct MuJoCo/OpenGL's orientation convention.
-- **Robot proprioceptive state**, nested and batched into an 8-D vector by `LiberoProcessorStep` ([eval_molmoact2.py:393-408](eval_molmoact2.py#L393-L408)):
+  - Camera mapping follows the official checkpoint's convention ([eval_molmoact2.py:203-206](src/eval_molmoact2.py#L203-L206)). Both are rendered at 256×256 by `OffScreenRenderEnv` and flipped 180° to correct MuJoCo/OpenGL's orientation convention.
+- **Robot proprioceptive state**, nested and batched into an 8-D vector by `LiberoProcessorStep` ([eval_molmoact2.py:393-408](src/eval_molmoact2.py#L393-L408)):
   - end-effector position `robot0_eef_pos` (3-D)
   - end-effector orientation `robot0_eef_quat` (4-D)
   - gripper joint position `robot0_gripper_qpos` (2-D, only 1 dim used downstream)
-- **Natural language instruction**: the task's `task.language` string from the LIBERO/BDDL task definition, passed as `task` ([eval_molmoact2.py:411](eval_molmoact2.py#L411)).
+- **Natural language instruction**: the task's `task.language` string from the LIBERO/BDDL task definition, passed as `task` ([eval_molmoact2.py:411](src/eval_molmoact2.py#L411)).
 
 ## Output
 
-- **Per inference step:** a continuous 7-DoF action (`dx, dy, dz, droll, dpitch, dyaw, gripper`), predicted with `inference_action_mode="continuous"` ([eval_molmoact2.py:424-427](eval_molmoact2.py#L424-L427)), unnormalized by `postprocessor`, then applied to the simulator via `env.step(action_np)`.
-- **Per episode:** a success flag, step count, seed, and (for episode 0 or on failure) a saved frame/video, written as one row to `results.csv` ([eval_molmoact2.py:459-475](eval_molmoact2.py#L459-L475)).
+- **Per inference step:** a continuous 7-DoF action (`dx, dy, dz, droll, dpitch, dyaw, gripper`), predicted with `inference_action_mode="continuous"` ([eval_molmoact2.py:424-427](src/eval_molmoact2.py#L424-L427)), unnormalized by `postprocessor`, then applied to the simulator via `env.step(action_np)`.
+- **Per episode:** a success flag, step count, seed, and (for episode 0 or on failure) a saved frame/video, written as one row to `results.csv` ([eval_molmoact2.py:459-475](src/eval_molmoact2.py#L459-L475)).
 - **Per task:** aggregated success rate + scene properties (object counts, distractor density, initial gripper-to-target distance) written to `scene_properties.csv` / `distractor_density.csv`.
 - **Per run:** all of the above merged into `nlp_analysis_table.csv`, plus `eval.log`, initial/failure frames, and failure videos; full list in **Repository contents** below.
 
@@ -217,21 +217,23 @@ At every control step, `eval_molmoact2.py` assembles a `mapped_obs` dict ([eval_
 
 All computed directly in `eval_molmoact2.py` / the CSVs it produces, no external eval harness:
 
-- **Episode success (binary)**: an episode is marked successful the instant the environment reward exceeds zero (`reward > 0`), which ends the episode early ([eval_molmoact2.py:433-435](eval_molmoact2.py#L433-L435)).
-- **Steps to completion (`n_steps`)**: number of environment steps taken before success or before hitting the suite's step cap, `TASK_MAX_STEPS` ([eval_molmoact2.py:54-59](eval_molmoact2.py#L54-L59)): 280 (Spatial/Object), 300 (Goal), 520 (Long).
-- **Per-task success rate**: `task_successes / n_episodes * 100`, logged at the end of each task's episode loop ([eval_molmoact2.py:482-483](eval_molmoact2.py#L482-L483)).
-- **Per-suite success rate**: `df.groupby("suite")["success"].mean() * 100` over all logged episodes, the top-line summary metric printed at the end of a run ([eval_molmoact2.py:511](eval_molmoact2.py#L511)).
-- **Average steps per task (`avg_steps`)**: mean `n_steps` grouped by `task_id`/`suite`, included in `nlp_analysis_table.csv` ([eval_molmoact2.py:514-519](eval_molmoact2.py#L514-L519)).
-- **Distractor density**: `n_distractors / total_objects` per task, parsed from the BDDL file's object/target lists ([eval_molmoact2.py:236-258](eval_molmoact2.py#L236-L258)); used as an independent variable against success rate, not a success metric itself.
-- **Initial gripper-to-target distance**: Euclidean norm between the gripper site position and the target object's body position at episode start ([eval_molmoact2.py:309-330](eval_molmoact2.py#L309-L330)); the other independent variable for the correlation analysis (see **Analysis**).
+- **Episode success (binary)**: an episode is marked successful the instant the environment reward exceeds zero (`reward > 0`), which ends the episode early ([eval_molmoact2.py:433-435](src/eval_molmoact2.py#L433-L435)).
+- **Steps to completion (`n_steps`)**: number of environment steps taken before success or before hitting the suite's step cap, `TASK_MAX_STEPS` ([eval_molmoact2.py:54-59](src/eval_molmoact2.py#L54-L59)): 280 (Spatial/Object), 300 (Goal), 520 (Long).
+- **Per-task success rate**: `task_successes / n_episodes * 100`, logged at the end of each task's episode loop ([eval_molmoact2.py:482-483](src/eval_molmoact2.py#L482-L483)).
+- **Per-suite success rate**: `df.groupby("suite")["success"].mean() * 100` over all logged episodes, the top-line summary metric printed at the end of a run ([eval_molmoact2.py:511](src/eval_molmoact2.py#L511)).
+- **Average steps per task (`avg_steps`)**: mean `n_steps` grouped by `task_id`/`suite`, included in `nlp_analysis_table.csv` ([eval_molmoact2.py:514-519](src/eval_molmoact2.py#L514-L519)).
+- **Distractor density**: `n_distractors / total_objects` per task, parsed from the BDDL file's object/target lists ([eval_molmoact2.py:236-258](src/eval_molmoact2.py#L236-L258)); used as an independent variable against success rate, not a success metric itself.
+- **Initial gripper-to-target distance**: Euclidean norm between the gripper site position and the target object's body position at episode start ([eval_molmoact2.py:309-330](src/eval_molmoact2.py#L309-L330)); the other independent variable for the correlation analysis (see **Analysis**).
 
 ## Repository contents
 
-| File | Purpose |
-|---|---|
-| [eval_molmoact2.py](eval_molmoact2.py) | Runs MolmoAct2 inference over one LIBERO suite, logs results and scene properties, saves failure frames/videos. |
-| [requirements.txt](requirements.txt) | Pinned Python dependencies (see note on LIBERO below; it isn't pip-installable from PyPI and must be cloned separately). |
-
+| File                                                                                    | Purpose                                                                                                                  |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [eval\_molmoact2.py](src/eval_molmoact2.py) | eval script used for the Goal|
+| [eval\_molmoact2\_spatial\_object.py](src/eval_molmoact2_spatial_object.py) | Suite-specific eval script used for the Object and Spatial suites. |
+| [GLOSSARY.md](docs/GLOSSARY.md) | Definitions of LIBERO/MolmoAct2 terms used throughout this repo. |
+| [LIBERO\_Object\_Spatial\_Detailed\_Analysis.pdf](docs/LIBERO_Object_Spatial_Detailed_Analysis.pdf) | Full Object/Spatial findings — per-task breakdowns, failure mechanisms, evidence tables. Referenced from the Object/Spatial analysis sections below. |
+| [requirements.txt](requirements.txt)    | Pinned Python dependencies (see note on LIBERO below; it isn't pip-installable from PyPI and must be cloned separately). |
 Running `eval_molmoact2.py` (see **Usage** above) generates everything else needed for analysis under `outputs/custom_eval/<suite>/`:
 
 | Output | Contents |
@@ -304,10 +306,10 @@ Suggested figures (per the project plan):
 
 | Suite | Success rate | Episodes run | Perfect tasks ( /10) | Min task SR | Avg steps  | Notes |
 |---|---|---|---|---|---|---|
-| `libero_spatial` | `[97.4]%` | `[500]` / 500 | 8 | `[82.0]%` | `105.6` | Wider task spread (std ~6) |
-| `libero_object` | `[99.8]%` | `[500]` / 500 | 9 | `[98.0]%` | `131.6` | Easiest, nearly saturated |
-| `libero_goal` | `[97.8]%` | `[500]` / 500 | 5 | `[90.0]%` | `111.7` | Fewest perfect tasks |
-| `libero_10` (Long) | `[96.8]%` | `[500]` / 500 | 6 | `[82.0]%` | `249.0` | Hardest suite, most steps |
+| `libero_spatial` | `97.4%` | `500` / 500 | 8 | `82.0%` | `105.6` | Wider task spread (std ~6) |
+| `libero_object` | `99.8%` | `500` / 500 | 9 | `98.0%` | `131.6` | Easiest, nearly saturated |
+| `libero_goal` | `97.8%` | `500` / 500 | 5 | `90.0%` | `111.7` | Fewest perfect tasks |
+| `libero_10` (Long) | `96.8%` | `500` / 500 | 6 | `82.0%` | `249.0` | Hardest suite, most steps |
 
 Best suite: `[Object]` at `[99.8]%`. Worst suite: `[Long]` at `[96.8]%`. Spread: `[3.0]` points ( **does not meet** the >10-point success criterion).
 
@@ -337,14 +339,92 @@ https://github.com/user-attachments/assets/71ce0089-310b-4b7d-a11a-0a70c6290ae9
 
 
 ### Spatial suite analysis: 
+ LIBERO-Spatial reaches **97.4% success (487/500)** — strong on
+average, but not uniform. Eight of ten tasks hit 100%; all 13 failures
+concentrate in two tasks, and every one of them times out at the
+280-step limit rather than correcting course.
+
+| Metric | Value |
+|---|---|
+| Suite success rate | 97.4% (487/500) |
+| Clean (first-try) success | 95.8% (479/500) |
+| Likely-recovery success | 1.6% (8/500) |
+| Timeout failures | 2.6% (13/500), all 13 hit max_steps |
+| Avg. episode length (success) | ~100 steps (vs. 280 max) |
+
+| Task | Success rate | Failure type |
+|---|---|---|
+| Task 5 (bowl on ramekin → plate) | 82% (9/50 fail) | Grounding — wrong object at first close |
+| Task 4 (drawer extraction) | 92% (4/50 fail) | Grasp/control — correct object, failed reach/lift |
+| Remaining 8 tasks | 100% | — |
+
+**Task 5** is a vision–language **grounding failure**: 54% of all
+suite failures involve the gripper's first closure landing on the
+*ramekin* — the support object named in the relational phrase — rather
+than the *bowl*, the actual target. Once mis-grounded, **recovery is
+0%**: no failed episode re-targets the correct object afterward; the
+episode just runs out the step budget with the bowl never grasped.
+
+**Task 4** is a separate, **control-side failure**: wrong-object rate
+here is ~0% (the policy correctly identifies the bowl), but it splits
+into a grasp/control failure (correct close, low pick displacement,
+repeated attempts without a stable lift — 31% of suite failures) and a
+reach/targeting failure (end-effector never converges close enough to
+grasp — 15%). Both reflect unreliable manipulation under the drawer's
+constrained geometry, not misidentification.
+
+Most spatial-relation phrasings in the suite (next to, between, from
+the center, in the drawer) succeed at or near 100%, so this isn't a
+general failure to parse spatial language — it's specific to these two
+task structures, and it mirrors Object's core pattern: the policy is
+excellent on the first attempt and has no mechanism to recover once
+that attempt goes wrong.
+
+*Full breakdown — per-task chart, wrong-object rate by task, and the
+fail-mode taxonomy behind these two clusters — is in
+[`LIBERO_Object_Spatial_Detailed_Analysis.pdf`](docs/LIBERO_Object_Spatial_Detailed_Analysis.pdf).*
 
 Spatial failure example:
-
 
 https://github.com/user-attachments/assets/196a5e48-3e97-4323-bc40-14fd0b27d7b6
 
 
 ### Object suite analysis: 
+
+LIBERO-Object is effectively solved for instance-level visual
+targeting: **99.8% success (499/500)**. Nine of ten tasks hit 100%;
+Task 4 (ketchup → basket, 98%) is the only exception, and it's a
+single isolated episode, not a pattern across related tasks.
+
+| Metric | Value |
+|---|---|
+| Suite success rate | 99.8% (499/500) |
+| Clean (first-try) success | 96.8% (484/500) |
+| Likely-recovery success | 3.0% (15/500) |
+| Timeout failure | 0.2% (1/500) |
+| Wrong-object-at-first-close rate | ~0% (suite-wide) |
+| Avg. episode length (success) | ~130 steps (vs. 280 max) |
+
+The single failure has a **correct first grasp** — ruling out a
+visual-identification or object-grounding explanation outright — but
+the episode shows 5 grasp attempts, a partial pick displacement
+(~0.20), and a final place distance of ~0.31 m from the receptacle
+(vs. 0.01–0.09 m for successes), before timing out at 280 steps. That
+evidence chain — right object, partial lift, repeated re-grasping,
+uncorrected final distance — localizes the error to **post-pick place
+completion** in the action/control pathway, not perception.
+Identity-conditioned manipulation (picking the correct item among
+visually similar distractors) is not a bottleneck for this checkpoint.
+
+Consistent with the suite's overall pattern: when the first attempt is
+right, the episode finishes cleanly and well under budget (~130 of 280
+steps); when it isn't, the policy keeps retrying variations of the
+same failed action rather than adjusting, and simply runs out the
+step budget instead of recovering.
+
+*Full breakdown — per-task success chart, outcome-mix chart, and the
+grasp-count/place-distance evidence behind this failure — is in
+[`LIBERO_Object_Spatial_Detailed_Analysis.pdf`](docs/LIBERO_Object_Spatial_Detailed_Analysis.pdf).*
 
 Object failure example:
 
