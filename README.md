@@ -311,16 +311,20 @@ Suggested figures (per the project plan):
 
 Best suite: `[Object]` at `[99.8]%`. Worst suite: `[Long]` at `[96.8]%`. Spread: `[3.0]` points ( **does not meet** the >10-point success criterion).
 
-![Combined suite success rate and episode counts](results/combined_results/01_overall_success.jpeg)
+![Combined suite success rate and episode counts](results/combined_results/01_combined_suite_summary.png)
+
 *Suite-level success rate and episode counts across all four suites.*
 
 ![Per-suite difficulty spread](results/combined_results/02_difficulty_spread_by_suite.png)
+
 *Per-task success rate distribution within each suite — the metric that motivates looking past suite-level means.*
 
-![Step-budget usage by suite](results/combined_results/03_step_budget_usage.png)
+![Step-budget usage by suite](results/combined_results/03_step_budget_usage.png) 
+
 *Mean steps used as a percentage of each suite's step budget — normalizes for the different `max_steps` caps (280/280/300/520) so suites are cross-comparable. Object and Long both use ~47% of budget despite being the easiest and hardest suites by success rate.*
 
 ![Pooled hardest tasks across all suites](results/combined_results/04_pooled_hardest_tasks.png)
+
 *Bottom 15 tasks by success rate, pooled across all four suites and colored by suite of origin. The hardest tasks are dominated by multi-object and articulated/container instructions, not any single suite.*
 
 ![success example ](results/libero_spatial/videos/successes/libero_spatial_9_ep18_ok.mp4)
