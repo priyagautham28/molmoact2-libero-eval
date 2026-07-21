@@ -4,13 +4,13 @@
 
 Team: Pick and Parse (Priyadarshini Rajmohan, Poojitha Alam, Mounika Akkenapragada), CSE D 504
 
-MolmoAct2 (Allen Institute for AI, 2026) is a recent open Vision-Language-Action (VLA) model with an embodied-reasoning VLM backbone (Molmo2-ER), full LIBERO evaluation support, and public checkpoints. This repo runs MolmoAct2 (`allenai/MolmoAct2-LIBERO-LeRobot`) on all four [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO) suites (Spatial, Object, Goal, Long; 40 tasks × 50 episodes = 2,000 episodes) as an **inference-only** pipeline. We extract scene-complexity features from simulator/BDDL state (object counts, gripper-to-target distance, distractor density) with no extra vision models, and we analyze where MolmoAct2 succeeds vs fails
+MolmoAct2 (Allen Institute for AI, 2026) is a recent open Vision-Language-Action (VLA) model with an embodied-reasoning VLM backbone (Molmo2-ER), full LIBERO evaluation support, and public checkpoints. This repo runs MolmoAct2 (`allenai/MolmoAct2-LIBERO-LeRobot`) on all four [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO) suites (Spatial, Object, Goal, Long 40 tasks × 50 episodes = 2,000 episodes) as an **inference-only** pipeline. We extract scene-complexity features from simulator/BDDL state (object counts, gripper-to-target distance, distractor density) with no extra vision models, and we analyze where MolmoAct2 succeeds vs fails
 
 ## Research question
 
 How does MolmoAct2's task success rate vary across LIBERO task suites, and which scene properties (object density, spatial layout, task length, distractor density: n_distractors / total_objects named in the instruction) explain where the model succeeds vs. fails?
 
-- **Minimal goal:** per-task success rates across all 2,000 episodes; a baseline profile of which suite is easiest/hardest.
+- **Minimal goal:** per-task success rates across all 2,000 episodes a baseline profile of which suite is easiest/hardest.
 - **Ambitious goal:** Spearman correlation between scene properties and success rate, a qualitative failure gallery, and (in the follow-on NLP phase) whether visual clutter and distractor density are correlated predictors of failure.
 - **Success criterion:** Deliver suite and task level success rates for all four LIBERO suites under a fixed MolmoAct2 protocol, plus Spearman tests of scene properties vs success. A large suite gap or |r| > 0.3 with p < 0.05 would indicate complexity-sensitive failures, a null/weak result is also valid, especially if scene properties vary little within suites.
 
@@ -29,12 +29,12 @@ Why this design, specifically:
 - **Scene properties come from the simulator, not a second vision model.** Object count, distractor density, and gripper-to-target distance are read directly from LIBERO's own state (BDDL files, sim positions) rather than estimated by a detector. That removes a whole source of noise/confound from the analysis: any correlation we find is between MolmoAct2's behavior and *ground-truth* scene complexity, not between MolmoAct2 and some other model's guess at scene complexity. It's also free: zero extra GPU time, per the proposal's constraint.
 - **LIBERO's four suites double as the complexity axis.** Rather than inventing a new complexity metric, we use Spatial/Object/Goal/Long as-is: LIBERO's own designers already ordered these by increasing difficulty, so suite label is a pre-validated proxy we don't have to justify from scratch.
 - **Distractor density is defined from the BDDL ground truth** (`n_distractors / total_objects`), rather than estimated from camera images.. Same reasoning as above: deterministic and reproducible, not dependent on a second model's accuracy.
-- **Spearman, not Pearson, for the correlation analysis.** Success rate is bounded in [0, 1] and scene properties (object count, distance) aren't guaranteed to relate to it linearly; Spearman only assumes a monotonic relationship, which is the weaker, more defensible assumption here.
+- **Spearman, not Pearson, for the correlation analysis.** Success rate is bounded in [0, 1] and scene properties (object count, distance) aren't guaranteed to relate to it linearly. Spearman only assumes a monotonic relationship, which is the weaker, more defensible assumption here.
 - **Fixed eval seed, per-episode seeding, and LIBERO's built-in init states** (`--eval_seed 1000`, `--per_episode_seed`, `--use_init_states`) match the protocol MolmoAct2's own published LIBERO numbers were evaluated under, so our success rates are comparable to prior reported results rather than an artifact of a different eval setup.
 
 ## Requirements
 
-- **GPU:** MolmoAct2 inference at `bfloat16` uses ~14 GB VRAM. A full suite (50 episodes × 10 tasks) takes roughly 1–2 hours on CUDA; CPU/MPS is much slower and only recommended for a smoke test.
+- **GPU:** MolmoAct2 inference at `bfloat16` uses ~14 GB VRAM. A full suite (50 episodes × 10 tasks) takes roughly 1–2 hours on CUDA, CPU/MPS is much slower and only recommended for a smoke test.
 - **Python:** 3.12 (3.13 also confirmed working with the pinned `lerobot==0.6.0`).
 - **Disk:** ~10 GB for the MolmoAct2 checkpoint (downloaded automatically, cached by `huggingface_hub`).
 - **LIBERO** requires MuJoCo and a rendering backend (EGL headless on Linux+CUDA, native OpenGL elsewhere). See platform notes below.
@@ -233,7 +233,7 @@ All computed directly in `eval_molmoact2.py` / the CSVs it produces, no external
 | [eval\_molmoact2\_spatial\_object.py](src/eval_molmoact2_spatial_object.py) | Suite-specific eval script used for the Object and Spatial suites and additionally logs grasp/close events, nearest object at first close, pick/place distances, path length, timeout, and `likely_recovery` for failure-mode analysis. |
 | [GLOSSARY.md](docs/GLOSSARY.md) | Definitions of LIBERO/MolmoAct2 terms used throughout this repo. |
 | [LIBERO\_Object\_Spatial\_Detailed\_Analysis.pdf](docs/LIBERO_Object_Spatial_Detailed_Analysis.pdf) | Full Object/Spatial findings — per-task breakdowns, failure mechanisms, evidence tables. Referenced from the Object/Spatial analysis sections below. |
-| [requirements.txt](requirements.txt)    | Pinned Python dependencies (see note on LIBERO below; it isn't pip-installable from PyPI and must be cloned separately). |
+| [requirements.txt](requirements.txt)    | Pinned Python dependencies (see note on LIBERO below, it isn't pip-installable from PyPI and must be cloned separately). |
 Running `eval_molmoact2.py` (see **Usage** above) generates everything else needed for analysis under `outputs/custom_eval/<suite>/`:
 
 | Output | Contents |
@@ -315,7 +315,7 @@ Best suite: `[Object]` at `[99.8]%`. Worst suite: `[Long]` at `[96.8]%`. Spread:
 
 ![Combined suite success rate and episode counts](results/combined_results/01_combined_suite_summary.png)
 
-*Suite-level success rate across all four suites (y-axis zoomed near ceiling; Δ = points below 100%).*
+*Suite-level success rate across all four suites (y-axis zoomed near ceiling Δ = points below 100%).*
 
 ![Per-suite difficulty spread](results/combined_results/02_difficulty_spread_by_suite.png)
 
@@ -446,7 +446,7 @@ https://github.com/user-attachments/assets/2964bb88-6fcd-47f2-8193-1812165969ee
 
 ### Failure gallery
 
-Representative failure clips by suite (full folders linked; one example each).  
+Representative failure clips by suite (full folders linked one example each).  
 On GitHub, open a link to view/download the MP4.
 | Suite | Failure videos folder |
 |---|---|
@@ -459,11 +459,11 @@ On GitHub, open a link to view/download the MP4.
 
 **Aggregate performance.** Across all four LIBERO suites (2,000 episodes under a fixed MolmoAct2 protocol), MolmoAct2 is consistently strong: pooled success **97.95%**. Suite means sit in a narrow band — Object **99.8%**, Goal **97.8%**, Spatial **97.4%**, Long **96.8%** — a **~3-point** easiest-to-hardest gap. High overall accuracy therefore does **not** mean “equally easy everywhere”: within-suite task spreads and a small set of hard tasks (multi-object / articulated / container instructions in the pooled hardest-task plot) carry most of the remaining error.
 
-**Where failures concentrate.** Errors are **task-clustered**, not suite-wide collapses. In Spatial, all 13 failures sit in two tasks (Task 5 grounding / wrong-object, Task 4 grasp–reach under drawer geometry), and every failure **times out** at 280 steps rather than recovering. In Object, the suite is nearly saturated (499/500). The single failure is **post-pick place completion** with a correct first grasp, not identity confusion among distractors. In Long, failures also cluster: Task 8 (*both moka pots on the stove*, 82%) accounts for most Long errors and typically completes the first pot but times out on the second; Tasks 9/6/3 fail mainly on later close or spatial subgoals — all timeouts at 520 steps. In Goal (**97.8%**, only **5/10** perfect tasks; min SR **90%**), errors are also **task-clustered** rather than suite-wide: the hardest cases are Task 2 (*put the wine bottle on top of the drawer*, **90%**) and Task 3 (*open the top drawer and put the bowl inside*, **94%**) — multi-step / appliance–container goals — while several pick-and-place goals remain at or near 100%. 
+**Where failures concentrate.** Errors are **task-clustered**, not suite-wide collapses. In Spatial, all 13 failures sit in two tasks (Task 5 grounding / wrong-object, Task 4 grasp–reach under drawer geometry), and every failure **times out** at 280 steps rather than recovering. In Object, the suite is nearly saturated (499/500). The single failure is **post-pick place completion** with a correct first grasp, not identity confusion among distractors. In Long, failures also cluster: Task 8 (*both moka pots on the stove*, 82%) accounts for most Long errors and typically completes the first pot but times out on the second Tasks 9/6/3 fail mainly on later close or spatial subgoals all timeouts at 520 steps. In Goal (**97.8%**, only **5/10** perfect tasks min SR **90%**), errors are also **task-clustered** rather than suite-wide: the hardest cases are Task 2 (*put the wine bottle on top of the drawer*, **90%**) and Task 3 (*open the top drawer and put the bowl inside*, **94%**) — multi-step / appliance–container goals while several pick-and-place goals remain at or near 100%. 
 
-**First-try strength, weak recovery.** Across Spatial and Object recovery monitoring, most successes are **clean first attempts**; “likely recovery” successes are rare (Spatial ~1.6%, Object ~3.0%). When the first attempt fails with wrong object, failed grasp/lift, or incomplete place  the policy typically **retries similar actions until timeout** instead of clearly re-planning. 
+**First-try strength, weak recovery.** Across Spatial and Object recovery monitoring, most successes are **clean first attempts** “likely recovery” successes are rare (Spatial ~1.6%, Object ~3.0%). When the first attempt fails with wrong object, failed grasp/lift, or incomplete place  the policy typically **retries similar actions until timeout** instead of clearly re-planning. 
 
-**Scene properties vs success.** Per-suite Spearman tests on available scene features did **not** meet our `|r| > 0.3` and `p < 0.05` bar (e.g., Spatial `initial_distance` r = 0.45, p = 0.19; Object/Goal similarly non-significant). Several within-suite predictors are also **n/a** because they are constant across that suite’s 10 tasks (no variation to correlate).
+**Scene properties vs success.** Per-suite Spearman tests on available scene features did **not** meet our `|r| > 0.3` and `p < 0.05` bar (e.g., Spatial `initial_distance` r = 0.45, p = 0.19 Object/Goal similarly non-significant). Several within-suite predictors are also **n/a** because they are constant across that suite’s 10 tasks (no variation to correlate).
 
 **Takeaway.** MolmoAct2 on LIBERO is a near-ceiling on most tasks, with residual risk concentrated in a few hard cases (spatial grounding, constrained grasp/place, longer-horizon Long tasks), and failures often look like **missing recovery** rather than missing competence on the first try. Safer deployment still needs suite and task-level reporting, not suite averages alone plus explicit handling of timeout / retry behavior on those hard scenes.
 
@@ -484,14 +484,14 @@ Carried over from the project proposal, with the decision rules we committed to:
 
 ## Ethical considerations
 
-Only open-source models (MolmoAct2, Apache 2.0) and benchmarks (LIBERO, MIT License) are used; no proprietary data, human subjects, or personal information. Results objectively evaluate a public model on a public benchmark, purely to surface failure conditions that inform safer deployment (e.g., where added safeguards or human oversight may be needed), not to misrepresent the model. All experiments run in the LIBERO MuJoCo simulator against a simulated Franka arm, so there is no physical robot hardware and no risk of physical harm.
+Only open-source models (MolmoAct2, Apache 2.0) and benchmarks (LIBERO, MIT License) are used no proprietary data, human subjects, or personal information. Results objectively evaluate a public model on a public benchmark, purely to surface failure conditions that inform safer deployment (e.g., where added safeguards or human oversight may be needed), not to misrepresent the model. All experiments run in the LIBERO MuJoCo simulator against a simulated Franka arm, so there is no physical robot hardware and no risk of physical harm.
 
 ## Licenses & attribution
 
 - **LIBERO**: MIT License. [Lifelong-Robot-Learning/LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO)
 - **MolmoAct2-LIBERO-LeRobot checkpoint**: Apache 2.0. [allenai/MolmoAct2-LIBERO-LeRobot](https://huggingface.co/allenai/MolmoAct2-LIBERO-LeRobot)
 - **LeRobot**: evaluation framework used for the policy/processor pipeline. [huggingface/lerobot](https://github.com/huggingface/lerobot)
-- No physical robot hardware, human subjects, or proprietary data are used; all experiments run in the LIBERO MuJoCo simulator.
+- No physical robot hardware, human subjects, or proprietary data are used, all experiments run in the LIBERO MuJoCo simulator.
 
 ## References
 
