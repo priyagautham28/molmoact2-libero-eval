@@ -339,8 +339,8 @@ https://github.com/user-attachments/assets/71ce0089-310b-4b7d-a11a-0a70c6290ae9
 
 
 ### Spatial suite analysis: 
- LIBERO-Spatial reaches **97.4% success (487/500)** — strong on
-average, but not uniform. Eight of ten tasks hit 100%; all 13 failures
+ LIBERO-Spatial reaches **97.4% success (487/500)** strong on
+average, but not uniform. 8 of 10 tasks hit 100%, all 13 failures
 concentrate in two tasks, and every one of them times out at the
 280-step limit rather than correcting course.
 
@@ -360,9 +360,9 @@ concentrate in two tasks, and every one of them times out at the
 
 **Task 5** is a vision–language **grounding failure**: 54% of all
 suite failures involve the gripper's first closure landing on the
-*ramekin* — the support object named in the relational phrase — rather
+*ramekin*, the support object named in the relational phrase rather
 than the *bowl*, the actual target. Once mis-grounded, **recovery is
-0%**: no failed episode re-targets the correct object afterward; the
+0%**: no failed episode re-targets the correct object afterward the
 episode just runs out the step budget with the bowl never grasped.
 
 **Task 4** is a separate, **control-side failure**: wrong-object rate
@@ -375,7 +375,7 @@ constrained geometry, not misidentification.
 
 Most spatial-relation phrasings in the suite (next to, between, from
 the center, in the drawer) succeed at or near 100%, so this isn't a
-general failure to parse spatial language — it's specific to these two
+general failure to parse spatial language it's specific to these two
 task structures, and it mirrors Object's core pattern: the policy is
 excellent on the first attempt and has no mechanism to recover once
 that attempt goes wrong.
@@ -392,7 +392,7 @@ https://github.com/user-attachments/assets/196a5e48-3e97-4323-bc40-14fd0b27d7b6
 ### Object suite analysis: 
 
 LIBERO-Object is effectively solved for instance-level visual
-targeting: **99.8% success (499/500)**. Nine of ten tasks hit 100%;
+targeting: **99.8% success (499/500)**. 9 of 10 tasks hit 100%,
 Task 4 (ketchup → basket, 98%) is the only exception, and it's a
 single isolated episode, not a pattern across related tasks.
 
@@ -405,20 +405,20 @@ single isolated episode, not a pattern across related tasks.
 | Wrong-object-at-first-close rate | ~0% (suite-wide) |
 | Avg. episode length (success) | ~130 steps (vs. 280 max) |
 
-The single failure has a **correct first grasp** — ruling out a
-visual-identification or object-grounding explanation outright — but
+The single failure has a **correct first grasp** ruling out a
+visual-identification or object-grounding explanation outright but
 the episode shows 5 grasp attempts, a partial pick displacement
 (~0.20), and a final place distance of ~0.31 m from the receptacle
 (vs. 0.01–0.09 m for successes), before timing out at 280 steps. That
-evidence chain — right object, partial lift, repeated re-grasping,
-uncorrected final distance — localizes the error to **post-pick place
+evidence chain right object, partial lift, repeated re-grasping,
+uncorrected final distance and localizes the error to **post-pick place
 completion** in the action/control pathway, not perception.
 Identity-conditioned manipulation (picking the correct item among
 visually similar distractors) is not a bottleneck for this checkpoint.
 
 Consistent with the suite's overall pattern: when the first attempt is
 right, the episode finishes cleanly and well under budget (~130 of 280
-steps); when it isn't, the policy keeps retrying variations of the
+steps) when it isn't, the policy keeps retrying variations of the
 same failed action rather than adjusting, and simply runs out the
 step budget instead of recovering.
 
@@ -442,7 +442,7 @@ https://github.com/user-attachments/assets/2964bb88-6fcd-47f2-8193-1812165969ee
 | Spatial | r = 0.45, p = 0.19 → **no** (this property did not meet the success bar) | **n/a** (same value on all 10 tasks — no variation to correlate) | **n/a** (same value on all 10 tasks — no variation to correlate) |
 | Object | r = 0.06, p = 0.87 → **no** (this property did not meet the success bar) | **n/a** (same value on all 10 tasks — no variation to correlate) | **n/a** (same value on all 10 tasks — no variation to correlate) |
 | Goal | r = 0.09, p = 0.83 → **no** (this property did not meet the success bar) | **n/a** (same value on all 10 tasks — no variation to correlate) | r = −0.24, p = 0.51 → **no** |
-| Long |  |  |  |
+| Long | **n/a** | **n/a** | r = 0.45, p = 0.20 → **no** (did not meet `|r| > 0.3` and `p < 0.05`) |
 
 ### Failure gallery
 
@@ -457,9 +457,15 @@ On GitHub, open a link to view/download the MP4.
 
 ### Conclusion
 
-Across all four LIBERO suites (2,000 episodes), MolmoAct2 is consistently strong: pooled success 97.95%, with only a small gap from easiest to hardest (Object 99.8% → Long 96.8%, ~3 points). Most tasks are near ceiling, the remaining errors sit in a small set of harder tasks, not as a broad collapse on any one suite.
+**Aggregate performance.** Across all four LIBERO suites (2,000 episodes under a fixed MolmoAct2 protocol), MolmoAct2 is consistently strong: pooled success **97.95%**. Suite means sit in a narrow band — Object **99.8%**, Goal **97.8%**, Spatial **97.4%**, Long **96.8%** — a **~3-point** easiest-to-hardest gap. High overall accuracy therefore does **not** mean “equally easy everywhere”: within-suite task spreads and a small set of hard tasks (multi-object / articulated / container instructions in the pooled hardest-task plot) carry most of the remaining error.
 
-What we see in practice is a policy that usually completes the task on a clean first attempt. When that first attempt goes wrong especially choosing the wrong object or failing a grasp/place the episode often runs out the step budget rather than clearly correcting and finishing. We do not frame this as a unique flaw of MolmoAct2: many current robot policies and VLA systems are similarly optimized for successful demonstrations and first-pass execution, with limited emphasis on retry or recovery. High aggregate success on LIBERO is therefore compatible with brittle behavior on a minority of hard scenes, which is the pattern our suite and task-level results support.
+**Where failures concentrate.** Errors are **task-clustered**, not suite-wide collapses. In Spatial, all 13 failures sit in two tasks (Task 5 grounding / wrong-object, Task 4 grasp–reach under drawer geometry), and every failure **times out** at 280 steps rather than recovering. In Object, the suite is nearly saturated (499/500). The single failure is **post-pick place completion** with a correct first grasp, not identity confusion among distractors. In Long, failures also cluster: Task 8 (*both moka pots on the stove*, 82%) accounts for most Long errors and typically completes the first pot but times out on the second; Tasks 9/6/3 fail mainly on later close or spatial subgoals — all timeouts at 520 steps. In Goal (**97.8%**, only **5/10** perfect tasks; min SR **90%**), errors are also **task-clustered** rather than suite-wide: the hardest cases are Task 2 (*put the wine bottle on top of the drawer*, **90%**) and Task 3 (*open the top drawer and put the bowl inside*, **94%**) — multi-step / appliance–container goals — while several pick-and-place goals remain at or near 100%. 
+
+**First-try strength, weak recovery.** Across Spatial and Object recovery monitoring, most successes are **clean first attempts**; “likely recovery” successes are rare (Spatial ~1.6%, Object ~3.0%). When the first attempt fails with wrong object, failed grasp/lift, or incomplete place  the policy typically **retries similar actions until timeout** instead of clearly re-planning. 
+
+**Scene properties vs success.** Per-suite Spearman tests on available scene features did **not** meet our `|r| > 0.3` and `p < 0.05` bar (e.g., Spatial `initial_distance` r = 0.45, p = 0.19; Object/Goal similarly non-significant). Several within-suite predictors are also **n/a** because they are constant across that suite’s 10 tasks (no variation to correlate).
+
+**Takeaway.** MolmoAct2 on LIBERO is a near-ceiling on most tasks, with residual risk concentrated in a few hard cases (spatial grounding, constrained grasp/place, longer-horizon Long tasks), and failures often look like **missing recovery** rather than missing competence on the first try. Safer deployment still needs suite and task-level reporting, not suite averages alone plus explicit handling of timeout / retry behavior on those hard scenes.
 
 ### Next steps
 1. **NLP / language ablations (priority):** On Spatial Task 5 (and optionally T0), hold scenes/seeds fixed and vary instructions (direct vs relational vs ambiguous, left/right or on/next-to counterfactuals). Score **correct object at first close** and success not only LIBERO reward when the text no longer matches the BDDL goal.
