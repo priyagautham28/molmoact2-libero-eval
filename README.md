@@ -490,8 +490,7 @@ correlation plots, and the frame-by-frame failure gallery are in
 
 Goal failure example:
 
-https://github.com/user-attachments/assets/c4cc9675-52c6-4d63-9ccc-2d51eefbf95f
-
+https://github.com/user-attachments/assets/07a1f1ee-3cc3-4bb7-98c3-080227fd7773
 
 
 ### long suite analysis: 
