@@ -489,8 +489,7 @@ correlation plots, and the frame-by-frame failure gallery are in
 [`goal_suite_analysis.ipynb`](results/libero_goal/goal_suite_analysis.ipynb).*
 
 Goal failure example:
-
-https://github.com/user-attachments/assets/38a44975-28ff-41f7-95f6-f1d7a59b6184
+https://github.com/user-attachments/assets/c4cc9675-52c6-4d63-9ccc-2d51eefbf95f
 
 
 
