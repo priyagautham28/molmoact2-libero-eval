@@ -541,6 +541,8 @@ The other Long failures also occur after partial progress. In Task 6, the mug-on
 
 The Long results are stored in [`results/libero_10/`](results/libero_10/), the Long analysis report is [`docs/Libero_10_analysis.pdf`](docs/Libero_10_analysis.pdf), and the eval script used for the Long run is [`src/eval_molmoact2_mounika_v2.py`](src/eval_molmoact2_mounika_v2.py).
 
+Full per-task charts, confidence intervals, scene-property/task-structure checks, and manual failed-subgoal analysis are in [`long_suite_analysis.ipynb`](docs/long_suite_analysis.ipynb).
+
 
 
 
