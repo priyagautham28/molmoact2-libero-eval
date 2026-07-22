@@ -486,7 +486,7 @@ until the clock runs out.
 
 *Full per-task charts, confidence intervals, scene-property
 correlation plots, and the frame-by-frame failure gallery are in
-[`goal_suite_analysis.ipynb`](results/libero_goal/goal_suite_analysis.ipynb).*
+[`goal_suite_analysis.ipynb`](docs/goal_suite_analysis.ipynb).*
 
 Goal failure example:
 
