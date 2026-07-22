@@ -233,7 +233,7 @@ All computed directly in `eval_molmoact2.py` / the CSVs it produces, no external
 | [eval\_molmoact2.py](src/eval_molmoact2.py) | eval script used for the Goal (success, steps, scene properties, fail videos)|
 | [eval\_molmoact2\_spatial\_object.py](src/eval_molmoact2_spatial_object.py) | Suite-specific eval script used for the Object and Spatial suites and additionally logs grasp/close events, nearest object at first close, pick/place distances, path length, timeout, and `likely_recovery` for failure-mode analysis. |
 | [eval\_molmoact2\_mounika\_v2.py](src/eval_molmoact2_mounika_v2.py) | Eval script used for the Long / `libero_10` suite. It keeps the same MolmoAct2 inference/action logic and adds chunk/resume controls used to complete the 500-episode run robustly. |
-| [Libero\_10\_analysis.docx](docs/Libero_10_analysis.docx) | Long / LIBERO_10 analysis report with task-level results, failure analysis, plots, and manual subgoal review. |
+| [Libero\_10\_analysis.pdf](docs/Libero_10_analysis.pdf) | Long / LIBERO_10 analysis report with task-level results, failure analysis, plots, and manual subgoal review. |
 | [GLOSSARY.md](docs/GLOSSARY.md) | Definitions of LIBERO/MolmoAct2 terms used throughout this repo. |
 | [LIBERO\_Object\_Spatial\_Detailed\_Analysis.pdf](docs/LIBERO_Object_Spatial_Detailed_Analysis.pdf) | Full Object/Spatial findings — per-task breakdowns, failure mechanisms, evidence tables. Referenced from the Object/Spatial analysis sections below. |
 | [requirements.txt](requirements.txt) | Pinned Python dependencies (see note on LIBERO below, it isn't pip-installable from PyPI and must be cloned separately). |
@@ -539,7 +539,7 @@ The Long suite's main outlier is **Task 8**, which accounts for 9 of the 16 Long
 
 The other Long failures also occur after partial progress. In Task 6, the mug-on-plate subgoal is usually completed, but the chocolate-pudding placement to the right of the plate fails. In Task 3 and Task 9, the failures are mainly associated with the final close-action or final accepted state. Overall, Long failures are concentrated in later subgoals involving repeated object placement, spatial precision, and articulated-object closure.
 
-The Long results are stored in [`results/libero_10/`](results/libero_10/), the Long analysis report is [`docs/Libero_10_analysis.docx`](docs/Libero_10_analysis.docx), and the eval script used for the Long run is [`src/eval_molmoact2_mounika_v2.py`](src/eval_molmoact2_mounika_v2.py).
+The Long results are stored in [`results/libero_10/`](results/libero_10/), the Long analysis report is [`docs/Libero_10_analysis.pdf`](docs/Libero_10_analysis.pdf), and the eval script used for the Long run is [`src/eval_molmoact2_mounika_v2.py`](src/eval_molmoact2_mounika_v2.py).
 
 
 
@@ -562,7 +562,7 @@ On GitHub, open a link to view/download the MP4.
 | Spatial | [`results/libero_spatial/videos/failures/`](results/libero_spatial/videos/failures/) | 
 | Object | [`results/libero_object/videos/failures/`](results/libero_object/videos/failures/) | 
 | Goal | [`results/libero_goal/videos/failures/`](results/libero_goal/videos/failures/) | 
-| Long | [`results/libero_10/all_failure_video_subgoal_annotations.csv`](results/libero_10/all_failure_video_subgoal_annotations.csv) and [`docs/Libero_10_analysis.docx`](docs/Libero_10_analysis.docx). Raw MP4 videos were reviewed manually but are not committed to keep the repo lightweight. |
+| Long | [`results/libero_10/all_failure_video_subgoal_annotations.csv`](results/libero_10/all_failure_video_subgoal_annotations.csv) and [`docs/Libero_10_analysis.pdf`](docs/Libero_10_analysis.pdf). Raw MP4 videos were reviewed manually but are not committed to keep the repo lightweight. |
 
 ### Conclusion
 
