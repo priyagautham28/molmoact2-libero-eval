@@ -488,7 +488,9 @@ until the clock runs out.
 correlation plots, and the frame-by-frame failure gallery are in
 [`goal_suite_analysis.ipynb`](results/libero_goal/goal_suite_analysis.ipynb).*
 
-Goal failure example: [`libero_goal_2_ep0_fail.mp4`](results/libero_goal/videos/failures/libero_goal_2_ep0_fail.mp4)
+Goal failure example:
+
+<video src="https://github.com/priyagautham28/molmoact2-libero-eval/raw/main/results/libero_goal/videos/failures/libero_goal_2_ep0_fail.mp4" controls></video>
 
 ### long suite analysis: 
 
