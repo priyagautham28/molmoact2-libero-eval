@@ -363,6 +363,13 @@ concentrate in two tasks, and every one of them times out at the
 | Task 4 (drawer extraction) | 92% (4/50 fail) | Grasp/control — correct object, failed reach/lift |
 | Remaining 8 tasks | 100% | — |
 
+Watching the failure episodes and first-close targets, the 13 failures split into three distinct modes:
+| Failure type | Task | Share of suite failures | What it looks like |
+|---|---|---|---|
+| Wrong-object grounding | Task 5 | 54% (7/13) | First gripper close lands on the *ramekin* (named in the relational phrase), not the *bowl* (the target), never re-targets |
+| Grasp never secures | Task 4 | 31% (4/13) | Correct object, correct close, but repeated attempts without a stable lift under the drawer geometry |
+| Reach/targeting never converges | Task 4 | 15% (2/13) | End-effector never gets close enough to grasp at all |
+
 **Task 5** is a vision–language **grounding failure**: 54% of all
 suite failures involve the gripper's first closure landing on the
 *ramekin*, the support object named in the relational phrase rather
@@ -409,6 +416,15 @@ single isolated episode, not a pattern across related tasks.
 | Timeout failure | 0.2% (1/500) |
 | Wrong-object-at-first-close rate | ~0% (suite-wide) |
 | Avg. episode length (success) | ~130 steps (vs. 280 max) |
+
+The single failure's evidence chain isolates it to **post-pick place completion**, not perception:
+| Signal | Failure episode | Typical success |
+|---|---|---|
+| Object at first close | Correct (ketchup) | Correct |
+| Grasp attempts | 5 | 1 |
+| Pick displacement | ~0.20 (partial) | full lift |
+| Final place distance | ~0.31 m | 0.01–0.09 m |
+| Outcome | Timeout at 280 steps | Finishes ~130 steps |
 
 The single failure has a **correct first grasp** ruling out a
 visual-identification or object-grounding explanation outright but
@@ -558,7 +574,7 @@ On GitHub, open a link to view/download the MP4.
 
 **Scene properties vs success.** Per-suite Spearman tests on available scene features did **not** meet our `|r| > 0.3` and `p < 0.05` bar (e.g., Spatial `initial_distance` r = 0.45, p = 0.19 Object/Goal similarly non-significant). Several within-suite predictors are also **n/a** because they are constant across that suite’s 10 tasks (no variation to correlate).
 
-**Takeaway.** MolmoAct2 on LIBERO is a near-ceiling on most tasks, with residual risk concentrated in a few hard cases (spatial grounding, constrained grasp/place, longer-horizon Long tasks), and failures often look like **missing recovery** rather than missing competence on the first try. Safer deployment still needs suite and task-level reporting, not suite averages alone plus explicit handling of timeout / retry behavior on those hard scenes.
+**Takeaway.** MolmoAct2 on LIBERO is a near-ceiling on most tasks, with residual risk concentrated in a few hard cases (spatial grounding, constrained grasp/place, longer-horizon Long tasks), and failures often look like **missing recovery** rather than missing competence on the first try. Safer deployment still needs suite and task-level reporting plus explicit handling of timeout / retry behavior on those hard scenes.
 
 ### Next steps
 1. **NLP / language ablations (priority):** On Spatial Task 5 (and optionally T0), hold scenes/seeds fixed and vary instructions (direct vs relational vs ambiguous, left/right or on/next-to counterfactuals). Score **correct object at first close** and success not only LIBERO reward when the text no longer matches the BDDL goal.
