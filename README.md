@@ -490,7 +490,9 @@ correlation plots, and the frame-by-frame failure gallery are in
 
 Goal failure example:
 
-<video src="https://github.com/priyagautham28/molmoact2-libero-eval/raw/main/results/libero_goal/videos/failures/libero_goal_2_ep0_fail.mp4" controls></video>
+https://github.com/user-attachments/assets/38a44975-28ff-41f7-95f6-f1d7a59b6184
+
+
 
 ### long suite analysis: 
 
