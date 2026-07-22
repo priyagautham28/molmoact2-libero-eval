@@ -433,6 +433,63 @@ https://github.com/user-attachments/assets/2964bb88-6fcd-47f2-8193-1812165969ee
 
 ### Goal suite analysis: 
 
+LIBERO-Goal reaches **97.8% success (489/500)**, the fewest perfect
+tasks of the four suites: 5 of 10 hit 100%, and all 11 failures
+concentrate in four tasks, one of them (Task 2, wine bottle onto the
+drawer) accounting for nearly half.
+
+| Metric | Value |
+|---|---|
+| Suite success rate | 97.8% (489/500) |
+| Perfect tasks | 5/10 |
+| Weakest task | Task 2 (wine bottle → top of drawer), 90% |
+| Every failure hits max_steps (300)? | Yes, all 9 saved failure videos |
+| Scene-property correlation (within suite) | None — `distractor_density` r=−0.24, p=0.51; `initial_distance` r=0.09, p=0.83 (bar for "yes": `\|r\| > 0.3` and `p < 0.05`, same threshold used suite-wide below) |
+
+| Task | Success rate | Failure type |
+|---|---|---|
+| Task 2 (wine bottle → top of drawer) | 90% (5/50 fail) | Grasp/control — bottle tips before being held (2/3 saved failures), or dropped mid-carry (1/3) |
+| Task 3 (open top drawer, put bowl inside) | 94% (3/50 fail) | Control — pull-to-open never succeeds; bowl is never touched |
+| Task 4 (bowl → top of drawer) | 98% (1/50 fail) | Control — drops the bowl mid-carry, same pattern as Task 2 |
+| Task 5 (push plate to front of stove) | 98% (1/50 fail) | Completion — correct push, then keeps going and disturbs another object |
+| Task 7 (turn on the stove) | 98% (1/50 fail) | Control — reaches the knob, but the press/turn action itself doesn't register |
+| Remaining 5 tasks | 100% | — |
+
+Unlike Spatial's Task 5, Goal's failures aren't a **grounding**
+problem the model is never confused about which object it needs.
+Every failure is instead a **manipulation-precision** issue: a grasp
+that doesn't secure, a hold that slips mid-carry, a pull/press that
+doesn't fully execute, or a stop condition that fires too late.
+Watching all 9 saved failure videos frame-by-frame turned up four
+distinct failure types:
+
+| Failure type | Tasks affected | What it looks like |
+|---|---|---|
+| Grasp never secures | Task 2 (2/3 failures) | Fumbles the pickup, object tips over before being held |
+| Drops object mid-carry | Task 2 (1/3), Task 4 | Grasped successfully, lost before the placement finishes |
+| Can't complete the manipulation action | Task 3, Task 7 | Reaches the right spot (drawer/knob), but the pull/press motion doesn't succeed |
+| Doesn't stop at the right moment | Task 5 | Performs the correct action, then keeps going and disturbs something else |
+
+The clearest signal is **placement-specific, not object-specific**:
+Task 2 and Task 9 both move the *same* wine bottle, yet Task 2
+(placing it on top of the drawer) is the suite's weakest task while
+Task 9 (placing it on the rack) is a perfect 100%. Task 4 reinforces
+this from the other direction a different object (a bowl) aimed at
+the same "on top of the drawer" target, and it's imperfect too so the
+gap tracks the *placement*, not the object. Similarly, Task 0 ("open
+the middle drawer" alone) is 100%, ruling out drawer-pulling itself as
+the problem in Task 3; the likelier gap is reliably executing the
+*first step* of a two-step instruction. As in Spatial and Object,
+every failure times out at the 300-step cap rather than failing fast
+MolmoAct2 doesn't misfire and quit, it keeps trying (or stalling)
+until the clock runs out.
+
+*Full per-task charts, confidence intervals, scene-property
+correlation plots, and the frame-by-frame failure gallery are in
+[`goal_suite_analysis.ipynb`](results/libero_goal/goal_suite_analysis.ipynb).*
+
+Goal failure example: [`libero_goal_2_ep0_fail.mp4`](results/libero_goal/videos/failures/libero_goal_2_ep0_fail.mp4)
+
 ### long suite analysis: 
 
 ### Scene-property correlations (Spearman)
