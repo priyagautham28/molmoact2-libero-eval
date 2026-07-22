@@ -130,7 +130,8 @@ Run one suite at a time:
 python eval_molmoact2_spatial_object.py --suite libero_spatial --n_episodes 50 --device cuda
 python eval_molmoact2_spatial_object.py --suite libero_object  --n_episodes 50 --device cuda
 python eval_molmoact2.py --suite libero_goal    --n_episodes 50 --device cuda
-python eval_molmoact2.py --suite libero_10      --n_episodes 50 --device cuda
+python src/eval_molmoact2_mounika_v2.py --suite libero_10 --n_episodes 50 --device cuda
+
 ```
 
 (`libero_10` is LIBERO's internal name for the Long suite.) For a quick smoke test before a full overnight run, use `--n_episodes 1` and `--device cpu`.
@@ -169,7 +170,7 @@ python eval_molmoact2_spatial_object.py --suite libero_spatial --n_episodes 50 -
 python eval_molmoact2.py --suite libero_goal --n_episodes 50 --device cuda
 
 # Mounika
-python eval_molmoact2.py --suite libero_10 --n_episodes 50 --device cuda
+python src/eval_molmoact2_mounika_v2.py --suite libero_10 --n_episodes 50 --device cuda
 ```
 
 After all four suites finish, merge each suite's `nlp_analysis_table.csv` (see **Analysis**) before running the correlation analysis.
@@ -231,10 +232,14 @@ All computed directly in `eval_molmoact2.py` / the CSVs it produces, no external
 | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | [eval\_molmoact2.py](src/eval_molmoact2.py) | eval script used for the Goal (success, steps, scene properties, fail videos)|
 | [eval\_molmoact2\_spatial\_object.py](src/eval_molmoact2_spatial_object.py) | Suite-specific eval script used for the Object and Spatial suites and additionally logs grasp/close events, nearest object at first close, pick/place distances, path length, timeout, and `likely_recovery` for failure-mode analysis. |
+| [eval\_molmoact2\_mounika\_v2.py](src/eval_molmoact2_mounika_v2.py) | Eval script used for the Long / `libero_10` suite. It keeps the same MolmoAct2 inference/action logic and adds chunk/resume controls used to complete the 500-episode run robustly. |
+| [Libero\_10\_analysis.docx](docs/Libero_10_analysis.docx) | Long / LIBERO_10 analysis report with task-level results, failure analysis, plots, and manual subgoal review. |
 | [GLOSSARY.md](docs/GLOSSARY.md) | Definitions of LIBERO/MolmoAct2 terms used throughout this repo. |
 | [LIBERO\_Object\_Spatial\_Detailed\_Analysis.pdf](docs/LIBERO_Object_Spatial_Detailed_Analysis.pdf) | Full Object/Spatial findings — per-task breakdowns, failure mechanisms, evidence tables. Referenced from the Object/Spatial analysis sections below. |
-| [requirements.txt](requirements.txt)    | Pinned Python dependencies (see note on LIBERO below, it isn't pip-installable from PyPI and must be cloned separately). |
-Running `eval_molmoact2.py` (see **Usage** above) generates everything else needed for analysis under `outputs/custom_eval/<suite>/`:
+| [requirements.txt](requirements.txt) | Pinned Python dependencies (see note on LIBERO below, it isn't pip-installable from PyPI and must be cloned separately). |
+
+
+Running the eval scripts listed above generates the standard analysis outputs. For the Long / `libero_10` suite, the finalized outputs are committed under `results/libero_10/`.
 
 | Output | Contents |
 |---|---|
@@ -493,7 +498,35 @@ Goal failure example:
 https://github.com/user-attachments/assets/07a1f1ee-3cc3-4bb7-98c3-080227fd7773
 
 
-### long suite analysis: 
+### Long suite analysis: 
+
+LIBERO-Long (`libero_10`) reaches **96.8% success (484/500)**. This is the lowest suite-level success rate among the four suites, but performance is still strong overall: 6 of 10 tasks reach 100% success, and only four tasks produce failures. All 16 failures hit the 520-step limit, so these are timeout failures rather than runtime crashes.
+
+| Metric | Value |
+|---|---|
+| Suite success rate | 96.8% (484/500) |
+| Perfect tasks | 6/10 |
+| Weakest task | Task 8, "put both moka pots on the stove", 82% |
+| Failed episodes | 16/500 |
+| Every failure hits max_steps (520)? | Yes |
+| Main failure pattern | Later subgoal timeout after partial task progress |
+
+| Task | Success rate | Failure type |
+|---|---|---|
+| Task 3: black bowl in bottom drawer, close cabinet/drawer | 98% (1/50 fail) | Final close-action / accepted-state completion |
+| Task 6: mug on plate, pudding right of plate | 96% (2/50 fail) | Second subgoal spatial-placement timeout |
+| Task 8: both moka pots on stove | 82% (9/50 fail) | Second similar-object placement timeout |
+| Task 9: mug in microwave, close it | 92% (4/50 fail) | Microwave close-action / final-state timeout |
+| Remaining 6 tasks | 100% | — |
+
+The Long suite's main outlier is **Task 8**, which accounts for 9 of the 16 Long failures. Manual failure-video review shows a consistent second-subgoal failure pattern: the policy generally places one moka pot on the stove, then times out while attempting to place the second moka pot. This suggests the task is difficult because it requires repeated placement of two similar objects into the same target region, not because the policy fails immediately on the first object.
+
+The other Long failures also occur after partial progress. In Task 6, the mug-on-plate subgoal is usually completed, but the chocolate-pudding placement to the right of the plate fails. In Task 3 and Task 9, the failures are mainly associated with the final close-action or final accepted state. Overall, Long failures are concentrated in later subgoals involving repeated object placement, spatial precision, and articulated-object closure.
+
+The Long results are stored in [`results/libero_10/`](results/libero_10/), the Long analysis report is [`docs/Libero_10_analysis.docx`](docs/Libero_10_analysis.docx), and the eval script used for the Long run is [`src/eval_molmoact2_mounika_v2.py`](src/eval_molmoact2_mounika_v2.py).
+
+
+
 
 ### Scene-property correlations (Spearman)
 
@@ -513,7 +546,7 @@ On GitHub, open a link to view/download the MP4.
 | Spatial | [`results/libero_spatial/videos/failures/`](results/libero_spatial/videos/failures/) | 
 | Object | [`results/libero_object/videos/failures/`](results/libero_object/videos/failures/) | 
 | Goal | [`results/libero_goal/videos/failures/`](results/libero_goal/videos/failures/) | 
-| Long |  |  |
+| Long | [`results/libero_10/all_failure_video_subgoal_annotations.csv`](results/libero_10/all_failure_video_subgoal_annotations.csv) and [`docs/Libero_10_analysis.docx`](docs/Libero_10_analysis.docx). Raw MP4 videos were reviewed manually but are not committed to keep the repo lightweight. |
 
 ### Conclusion
 
